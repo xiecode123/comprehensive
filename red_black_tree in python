@@ -252,15 +252,3 @@ class Red_Black_Tree:
             x = y
             y = y.parent
         return y
-
-
-T = Red_Black_Tree([1, -1, -2, -3, 2, 5, 4, 3])
-T.inorder_walk(T.root)
-a = T.search(T.root, 5)
-print(a.color)
-print(T.min().key)
-print(T.max().key)
-print(T.inorder_successor(T.root).key)
-print(T.inorder_precursor(T.root).key)
-# print(T.root.parent)
-T.delete(T.root.left)
