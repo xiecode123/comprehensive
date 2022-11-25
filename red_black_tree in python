@@ -1,0 +1,266 @@
+class Node:
+    def __init__(self, key: int or float):
+        self.key = key
+        self.color: str = None
+        self.right: Node = None
+        self.left: Node = None
+        self.parent: Node = None
+
+
+class NIL:
+    def __init__(self):
+        self.key = float("inf")
+        self.color: str = "black"
+        self.right: Node = None
+        self.left: Node = None
+        self.parent: Node = None
+
+
+class Red_Black_Tree:
+    def __init__(self, key_list_or_node_list: list) -> None:
+        self.nil = NIL()
+        self.root: Node or NIL = self.nil
+        for i in key_list_or_node_list:
+            if isinstance(i, (int, float)):
+                self.insert(Node(i))
+            else:
+                self.insert(i)
+
+    def __left_rotate(self, x: Node) -> None:
+        y = x.right
+        x.right = y.left
+        if y.left:  # 要判断y是否为NIL
+            y.left.parent = x
+        y.parent = x.parent
+        if x.parent == self.nil:
+            self.root = y
+        elif x == x.parent.left:
+            x.parent.left = y
+        else:
+            x.parent.right = y
+        y.left = x
+        x.parent = y
+
+    def __right_rotate(self, x: Node) -> None:
+        y = x.left
+        x.left = y.right
+        if y.right:  # 要判断y是否为NIL
+            y.right.parent = x
+        y.parent = x.parent
+        if x.parent == self.nil:
+            self.root = y
+        elif x == x.parent.left:
+            x.parent.left = y
+        else:
+            x.parent.right = y
+        y.right = x
+        x.parent = y
+
+    def __insert_fixup(self, z: Node) -> None:
+        while z.parent.color == "red":  # 会保持循环不变式
+            if z.parent == z.parent.parent.left:
+                y = z.parent.parent.right  # 叔节点
+                if y.color == "red":
+                    z.parent.color = "black"
+                    y.color = "black"
+                    z.parent.parent.color = "red"
+                    z = z.parent.parent
+                else:
+                    if z == z.parent.right:
+                        z = z.parent
+                        self.__left_rotate(z)  # 左旋该节点
+                    z.parent.color = "black"  # 再平衡他的父节点和爷爷节点
+                    z.parent.parent.color = "red"
+                    self.__right_rotate(z.parent.parent)
+            else:
+                y = z.parent.parent.left  # 叔节点
+                if y.color == "red":
+                    z.parent.color = "black"
+                    y.color = "black"
+                    z.parent.parent.color = "red"
+                    z = z.parent.parent
+                else:
+                    if z == z.parent.left:
+                        z = z.parent
+                        self.__right_rotate(z)
+                    z.parent.color = "black"
+                    z.parent.parent.color = "red"
+                    self.__left_rotate(z.parent.parent)
+        self.root.color = "black"  # 如果插入的节点只有一个且恰好为根节点时
+
+    def insert(self, z: Node) -> None:
+        y = self.nil
+        x = self.root
+        while x != self.nil:
+            y = x  # y记录x的前一个位置
+            if z.key < x.key:
+                x = x.left
+            else:
+                x = x.right
+        z.parent = y
+        if y == self.nil:
+            self.root = z
+        elif z.key < y.key:
+            y.left = z
+        else:
+            y.right = z
+        z.right = self.nil
+        z.left = self.nil
+        z.color = "red"
+        self.__insert_fixup(z)
+
+    def __transplant(self, u: Node or NIL, v: Node or NIL):
+        if u.parent == self.nil:
+            self.root = v
+        elif u == u.parent.left:
+            u.parent.left = v
+        else:
+            u.parent.right = v
+        v.parent = u.parent
+
+    def __delete_fixup(self, x: Node or NIL) -> None:  # 维持之前x时y的右孩子或者y右孩子的左后代结点，要维持就是x所在的子树少的一个黑色节点
+        while x != self.root and x.color == "black":  # x所指向的结点视为多个黑色，通过移动x的位置平衡红黑树，知道把x指向的点红黑点，且该结点为根节点，只有为根节点时平衡
+            if x == x.parent.left:  # x为左节点时
+                w = x.parent.right  # w为x的兄弟结点
+                if w.color == "red":  # 第一种情况,此时x.parent为黑色，w为红色
+                    w.color = "black"
+                    x.parent.color = "red"  # 改变w与x.parent的情况
+                    self.__left_rotate(x.parent)  # 此时会马上满足第二或第三或第四种情况
+                if w.right.color == "black" and w.left.color == "black":  # w失衡   如果从情况1进入情况2，x.p是红色，执行后执行跳出循环
+                    w.color = "red"
+                    x = x.parent  # 将x上移，将x移到它的父亲结点，保持了该子树的平衡
+                else:
+                    if w.right.color == "black":  # w的左孩子为红色，右孩子为黑色
+                        w.left.color = "black"
+                        w.color = "red"
+                        self.__right_rotate(w)  # 交换颜色在右旋，红黑树性质不被破坏
+                        w = x.parent.right  # 新的w结点，情况就转换为情况4
+                    # 情况4：w的右孩子为红色
+                    w.color = x.parent.color
+                    x.parent.color = "black"
+                    w.right.color = "black"
+                    self.__left_rotate(x.parent)
+                    x = T.root  # 执行完情况四后肯定平衡，立即终止循环
+            else:
+                w = x.parent.left  # w为x的兄弟结点
+                if w.color == "red":  # 第一种情况,此时x.parent为黑色，w为红色
+                    w.color = "black"
+                    x.parent.color = "red"  # 改变w与x.parent的情况
+                    self.__right_rotate(x.parent)  # 此时会马上满足第二或第三或第四种情况
+                if w.right.color == "black" and w.left.color == "black":  # w失衡   如果从情况1进入情况2，x.p是红色，执行后执行跳出循环
+                    w.color = "red"
+                    x = x.parent  # 将x上移，将x移到它的父亲结点，保持了该子树的平衡
+                else:
+                    if w.left.color == "black":  # w的左孩子为红色，右孩子为黑色
+                        w.right.color = "black"
+                        w.color = "red"
+                        self.__left_rotate(w)  # 交换颜色在右旋，红黑树性质不被破坏
+                        w = x.parent.left  # 新的w结点，情况就转换为情况4
+                    # 情况4：w的右孩子为红色
+                    w.color = x.parent.color#将w的颜色定为父节点的颜色，保证旋转后维持红黑树的性质
+                    x.parent.color = "black"#增加x所在路径上的黑色结点，同时保持了旋转后红黑树的性质
+                    w.left.color = "black"#将红色结点的孩子结点变为黑色
+                    self.__right_rotate(x.parent)
+                    x = T.root  # 执行完情况四后肯定平衡，立即终止循环
+        x.color = "black"  # 当x为红色时，变为红色就可以立即平衡
+
+    def delete(self, z: Node) -> None:
+        y = z
+        y_original_color = y.color
+        if z.left == self.nil:
+            x = z.right
+            self.__transplant(z, z.right)
+        elif z.right == self.nil:
+            x = z.left
+            self.__transplant(z, z.left)
+        else:
+            y = self.__min(z.right)
+            y_original_color = y.color
+            x = y.right
+            if y.parent == z:
+                x.parent = y
+            else:
+                self.__transplant(y, y.right)
+                y.right = z.right
+                y.right.parent = y
+            self.__transplant(z, y)
+            y.left = z.left
+            y.left.parent = y
+            y.color = z.color
+            # x只会是黑色的nil或者红色结点
+        if y_original_color == "black":  # 删除的是黑色结点才要平衡，删除的是红色节点时，以上步骤已经将他平衡
+            self.__delete_fixup(x)
+
+    def inorder_walk(self, x: Node or NIL) -> None:
+        if x != self.nil:
+            self.inorder_walk(x.left)
+            print(x.key, x.color)
+            self.inorder_walk(x.right)
+
+    def search(self, x: Node or NIL, k: int or float) -> Node:
+        # while not isinstance(x,NIL) and k!=x.key:
+        while x != self.nil and k != x.key:
+            if k < x.key:
+                x = x.left
+            else:
+                x = x.right
+        return x
+
+    def min(self) -> int or float:
+        x = self.root
+        # while not isinstance(x.left,NIL):
+        while x.left != self.nil:
+            x = x.left
+        return x
+
+    def max(self) -> int or float:
+        x = self.root
+        # while not isinstance(x.right,NIL):
+        while x.right != self.nil:
+            x = x.right
+        return x
+
+    def __min(self, x) -> Node:
+        # while not isinstance(x.left,NIL):
+        while x.left != self.nil:
+            x = x.left
+        return x
+
+    def __max(self, x) -> Node:
+        # while not isinstance(x.right, NIL):
+        while x.right != self.nil:
+            x = x.right
+        return x
+
+    def inorder_successor(self, x: Node or NIL) -> Node:
+        # if not isinstance(x.right,NIL):
+        if x.right != self.nil:
+            return self.__min(x.right)
+        y = x.parent
+        while y != self.nil and x == y.right:  # not isinstance(y,NIL)
+            x = y
+            y = y.parent
+        return y
+
+    def inorder_precursor(self, x: Node or NIL) -> Node:  # 前驱结点
+        # if not isinstance(x.left,NIL):
+        if x.left != self.nil:
+            return self.__max(x.left)
+        y = x.parent
+        # while not isinstance(y,NIL) and x==y.left:
+        while y != self.nil and x == y.left:
+            x = y
+            y = y.parent
+        return y
+
+
+T = Red_Black_Tree([1, -1, -2, -3, 2, 5, 4, 3])
+T.inorder_walk(T.root)
+a = T.search(T.root, 5)
+print(a.color)
+print(T.min().key)
+print(T.max().key)
+print(T.inorder_successor(T.root).key)
+print(T.inorder_precursor(T.root).key)
+# print(T.root.parent)
+T.delete(T.root.left)
