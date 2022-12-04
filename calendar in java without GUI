@@ -1,0 +1,52 @@
+package project;
+import java.util.Scanner;
+public class Testa {
+    private static int getMonthday(int year,int months){
+        boolean isleapyear = year % 4 == 0 && year % 100 != 0 || year % 400 == 0;
+        if (months == 1 || months == 3 || months == 5 || months == 7 || months == 8 || months == 10 || months == 12)
+            return 31;
+        else if (months == 2 && isleapyear)
+            return 29;
+        else if (months == 2)
+            return 28;
+        else
+            return  30;
+    }
+        public static void main(String[] args) {
+        Scanner scanner=new Scanner(System.in);
+        int month;
+        int year;
+        int monthtotalday;
+        int sumday=0;
+        System.out.println("请输入年份:");
+        year = scanner.nextInt();
+        System.out.println("请输入月份:");
+        month = scanner.nextInt();
+        scanner.close();
+        for(int i=1900;i<=year;i++) {
+            if (i == year) {
+                for (int months = 1; months <= month-1; months++) {
+                    monthtotalday=getMonthday(i,months);
+                    sumday = sumday + monthtotalday;
+                }
+
+            } else{
+                for (int months = 1; months <= 12; months++) {
+                    monthtotalday=getMonthday(i,months);
+                    sumday = sumday + monthtotalday;
+                }
+            }
+        }
+        sumday=sumday+1;
+        int week=sumday%7;
+        System.out.println("一\t二\t三\t四\t五\t六\t日\t");
+        for (int i=1;i<=week-1;i++)
+            System.out.print("\t");
+        for(int d=1;d<=getMonthday(year,month);d++){
+                if ((d+week-1)%7==0)
+                    System.out.println(d);
+                else
+                    System.out.print(d+"\t");
+        }
+            }
+        }
